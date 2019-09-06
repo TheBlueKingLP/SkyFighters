@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -34,14 +33,17 @@ public class Listeners implements org.bukkit.event.Listener {
     @EventHandler
     public void ServerListPing(ServerListPingEvent e) {
         e.setMaxPlayers(0);
-        e.setMotd(ChatColor.GREEN + "SkyFighters v" + SkyFighters.instance.getDescription().getVersion() + "\n" + ChatColor.GOLD + Integer.toString(Bukkit.getOnlinePlayers().size()) + ChatColor.WHITE + " Players are online.");
+        e.setMotd(ChatColor.GREEN + "SkyFighters " + ChatColor.GOLD + "v" + SkyFighters.instance.getDescription().getVersion() + "\n" + Integer.toString(Bukkit.getOnlinePlayers().size()) + ChatColor.WHITE + " Players are online.");
     }
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent e) {
         e.getPlayer().setRemainingAir(e.getPlayer().getMaximumAir());
         if (e.getPlayer().isGliding() && e.getPlayer().isSneaking()) {
-            e.getPlayer().setVelocity(e.getPlayer().getLocation().getDirection().multiply(1.0f));
+            double vel = e.getPlayer().getVelocity().length();
+            double newvel = e.getPlayer().getLocation().getDirection().multiply(1.0f).length();
+            if (newvel > vel)
+                e.getPlayer().setVelocity(e.getPlayer().getLocation().getDirection().multiply(1.0f));
         }
     }
 
@@ -51,8 +53,7 @@ public class Listeners implements org.bukkit.event.Listener {
             Player p = (Player) e.getEntity();
             if (e.isGliding()) {
                 p.setVelocity(p.getLocation().getDirection().multiply(1.0f));
-            }
-            else {
+            } else {
                 Bukkit.broadcastMessage(ChatColor.GOLD + p.getName() + ChatColor.RED + " stopped flying");
                 // TODO Respawn the player
             }
