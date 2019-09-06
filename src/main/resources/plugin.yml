@@ -1,0 +1,10 @@
+main: "ch.laurinneff.skyfighters.SkyFighters"
+version: "1.0-SNAPSHOT"
+name: "SkyFighters"
+author: "Laurin Neff"
+description: "Fight in the sky!"
+commands:
+  skyfighters:
+    description: "The Command for every SkyFighters Feature"
+    aliases:
+      - "sf"

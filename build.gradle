@@ -1,0 +1,37 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.1.0"
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+group 'ch.laurinneff'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'papermc'
+        url 'https://papermc.io/repo/repository/maven-public/'
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.14.4-R0.1-SNAPSHOT'
+    compile "io.papermc:paperlib:1.0.2"
+}
+
+apply plugin: "com.github.johnrengelman.shadow"
+shadowJar {
+    relocate 'io.papermc.lib', 'ch.laurinneff.papertest.paperlib'
+}
