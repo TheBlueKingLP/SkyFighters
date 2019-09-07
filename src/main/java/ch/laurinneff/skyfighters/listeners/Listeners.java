@@ -1,16 +1,23 @@
 package ch.laurinneff.skyfighters.listeners;
 
+import ch.laurinneff.skyfighters.Ring;
 import ch.laurinneff.skyfighters.SkyFighters;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -33,7 +40,15 @@ public class Listeners implements org.bukkit.event.Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         e.setJoinMessage(ChatColor.GOLD + p.getName() + ChatColor.GREEN + " joined the game.");
-        // TODO Give the new player some items
+        giveItems(p);
+    }
+
+    private void giveItems(Player p) {
+        PlayerInventory inv = p.getInventory();
+        inv.clear();
+        inv.setChestplate(new ItemStack(Material.ELYTRA));
+        p.getInventory().setContents(inv.getContents());
+        p.updateInventory();
     }
 
     @EventHandler
@@ -74,6 +89,19 @@ public class Listeners implements org.bukkit.event.Listener {
                 p.sendActionBar(ChatColor.RED + "COOLDOWN " + cooldownTimer);
             }
         }
+
+        Location loc = p.getLocation();
+        for (Ring ring : SkyFighters.instance.rings) {
+            if (p.isGliding() && (ring.x1 < loc.getX() && loc.getX() < ring.x2 && ring.y1 < loc.getY() && loc.getY() < ring.y2 && ring.z1 < loc.getZ() && loc.getZ() < ring.z2 ||
+                    ring.x1 > loc.getX() && loc.getX() > ring.x2 && ring.y1 > loc.getY() && loc.getY() > ring.y2 && ring.z1 > loc.getZ() && loc.getZ() > ring.z2)) {
+                if (ring.type.equals("boost")) {
+                    double vel = p.getVelocity().length();
+                    double newvel = p.getLocation().getDirection().multiply(2.0f).length();
+                    if (newvel > vel)
+                        p.setVelocity(p.getLocation().getDirection().multiply(2.0f));
+                }
+            }
+        }
     }
 
     @EventHandler
@@ -88,5 +116,17 @@ public class Listeners implements org.bukkit.event.Listener {
                 // TODO Respawn the player
             }
         }
+    }
+
+    @EventHandler
+    public void onHit(EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void itemDamage(PlayerItemDamageEvent e) {
+        e.setCancelled(true);
     }
 }
