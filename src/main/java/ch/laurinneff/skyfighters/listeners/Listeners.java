@@ -12,7 +12,13 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Listeners implements org.bukkit.event.Listener {
+    Map<Player, Long> boostCooldowns = new HashMap<Player, Long>();
+
     @EventHandler
     public void onClick(PlayerInteractEvent e) {
         if (e.getAction() == Action.LEFT_CLICK_AIR) {
@@ -38,12 +44,35 @@ public class Listeners implements org.bukkit.event.Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent e) {
-        e.getPlayer().setRemainingAir(e.getPlayer().getMaximumAir());
-        if (e.getPlayer().isGliding() && e.getPlayer().isSneaking()) {
-            double vel = e.getPlayer().getVelocity().length();
-            double newvel = e.getPlayer().getLocation().getDirection().multiply(1.0f).length();
-            if (newvel > vel)
-                e.getPlayer().setVelocity(e.getPlayer().getLocation().getDirection().multiply(1.0f));
+        Player p = e.getPlayer();
+        p.setRemainingAir(p.getMaximumAir());
+        if (p.isGliding() && p.isSneaking() &&
+                (!boostCooldowns.containsKey(p) ||
+                        (boostCooldowns.get(p) + 1 > Instant.now().getEpochSecond()) ||
+                        (boostCooldowns.get(p) + 3 < Instant.now().getEpochSecond()))) {
+            double vel = p.getVelocity().length();
+            double newvel = p.getLocation().getDirection().multiply(1.0f).length();
+            if (newvel > vel) {
+                p.setVelocity(p.getLocation().getDirection().multiply(1.0f));
+                if (!boostCooldowns.containsKey(p) ||
+                        !(boostCooldowns.get(p) + 1 > Instant.now().getEpochSecond()))
+                    boostCooldowns.put(p, Instant.now().getEpochSecond() + 1);
+            }
+        }
+
+        if (p.isGliding()) {
+            if (!boostCooldowns.containsKey(p) || boostCooldowns.get(p) + 3 < Instant.now().getEpochSecond()) {
+                p.sendActionBar(ChatColor.GREEN + "BOOST (SHIFT)");
+            } else if (boostCooldowns.get(p) + 1 > Instant.now().getEpochSecond()) {
+                p.sendActionBar(ChatColor.BLUE + "BOOSTING");
+                double vel = p.getVelocity().length();
+                double newvel = p.getLocation().getDirection().multiply(1.0f).length();
+                if (newvel > vel)
+                    p.setVelocity(p.getLocation().getDirection().multiply(1.0f));
+            } else {
+                long cooldownTimer = boostCooldowns.get(p) + 3 - Instant.now().getEpochSecond();
+                p.sendActionBar(ChatColor.RED + "COOLDOWN " + cooldownTimer);
+            }
         }
     }
 
@@ -55,6 +84,7 @@ public class Listeners implements org.bukkit.event.Listener {
                 p.setVelocity(p.getLocation().getDirection().multiply(1.0f));
             } else {
                 Bukkit.broadcastMessage(ChatColor.GOLD + p.getName() + ChatColor.RED + " stopped flying");
+                p.sendActionBar(" ");
                 // TODO Respawn the player
             }
         }
