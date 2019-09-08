@@ -5,9 +5,12 @@ import ch.laurinneff.skyfighters.listeners.Listeners;
 import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
+import org.bukkit.Material;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.entity.Item;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,10 +18,12 @@ import java.util.*;
 
 public class SkyFighters extends JavaPlugin {
     public static SkyFighters instance;
-    public List<Ring> rings = new ArrayList<Ring>();
+    public List<Ring> rings;
+    public List<Weapon> weapons;
 
     static {
         ConfigurationSerialization.registerClass(Ring.class, "Ring");
+        ConfigurationSerialization.registerClass(Weapon.class, "Weapon");
     }
 
     public void onEnable() {
@@ -34,11 +39,13 @@ public class SkyFighters extends JavaPlugin {
         FileConfiguration config = this.getConfig();
 
         config.addDefault("rings", new Ring[]{new Ring("boost", 0, 0, 0, 0, 0, 0)});
+        config.addDefault("weapons", new Weapon[]{new Weapon("Fireball", new ItemStack(Material.FIRE_CHARGE), "fireball", 3, 3)});
 
         config.options().copyDefaults(true);
         saveConfig();
 
         rings = config.getObject("rings", List.class);
+        weapons = config.getObject("weapons", List.class);
     }
 
     public void onDisable() {

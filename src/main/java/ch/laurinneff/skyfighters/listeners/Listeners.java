@@ -2,13 +2,14 @@ package ch.laurinneff.skyfighters.listeners;
 
 import ch.laurinneff.skyfighters.Ring;
 import ch.laurinneff.skyfighters.SkyFighters;
+import ch.laurinneff.skyfighters.Weapon;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -18,21 +19,95 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Listeners implements org.bukkit.event.Listener {
-    Map<Player, Long> boostCooldowns = new HashMap<Player, Long>();
+    private Map<Player, Long> boostCooldowns = new HashMap<>();
+    private List<Player> reloadingPlayers = new ArrayList<>();
 
     @EventHandler
     public void onClick(PlayerInteractEvent e) {
-        if (e.getAction() == Action.LEFT_CLICK_AIR) {
-            // TODO Add shooting here
+        e.setCancelled(true);
+        Player p = e.getPlayer();
+        switch (e.getAction()) {
+            case LEFT_CLICK_BLOCK:
+            case LEFT_CLICK_AIR:
+                Weapon weapon = SkyFighters.instance.weapons.get(p.getInventory().getHeldItemSlot());
+                shootWeapon(weapon, p);
+                break;
+            case RIGHT_CLICK_BLOCK:
+            case RIGHT_CLICK_AIR:
+                weapon = SkyFighters.instance.weapons.get(p.getInventory().getHeldItemSlot());
+                reloadWeapon(weapon, p);
+                break;
         }
-        if (e.getAction() == Action.RIGHT_CLICK_AIR) {
-            // TODO Add Reloading here
+    }
+
+    private void shootWeapon(Weapon w, Player p) {
+        reloadingPlayers.remove(p);
+
+        PlayerInventory inv = p.getInventory();
+        boolean setBarrier = false;
+        if (inv.getItemInMainHand().getAmount() == 1) {
+            setBarrier = true;
+        }
+        if (inv.getItemInMainHand().getType() != Material.BARRIER) {
+            switch (w.action) {
+                case "fireball":
+                    if (inv.getItemInMainHand().getAmount() > 0) {
+                        Fireball f = p.launchProjectile(Fireball.class);
+                        f.setVelocity(p.getLocation().getDirection().normalize().multiply(3));
+                        inv.setItemInMainHand(inv.getItemInMainHand().subtract(1));
+                    }
+                    break;
+            }
+        }
+        if (setBarrier) {
+            ItemStack item = new ItemStack(Material.BARRIER);
+            item.setAmount(1);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(w.name);
+            item.setItemMeta(meta);
+            inv.setItemInMainHand(item);
+        }
+        p.getInventory().setContents(inv.getContents());
+        p.updateInventory();
+    }
+
+    private void reloadWeapon(Weapon w, Player p) {
+        reloadingPlayers.add(p);
+        if (p.getInventory().getItemInMainHand().getAmount() != w.charges) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (reloadingPlayers.contains(p)) {
+                        if (p.getInventory().getItemInMainHand().getType() == Material.BARRIER) {
+                            PlayerInventory inv = p.getInventory();
+                            ItemStack item = w.item;
+                            item.setAmount(1);
+                            ItemMeta meta = item.getItemMeta();
+                            meta.setDisplayName(w.name);
+                            item.setItemMeta(meta);
+                            inv.setItemInMainHand(item);
+                        } else {
+                            p.getInventory().getItemInMainHand().setAmount(p.getInventory().getItemInMainHand().getAmount() + 1);
+                        }
+
+                        if (p.getInventory().getItemInMainHand().getAmount() >= w.charges) {
+                            reloadingPlayers.remove(p);
+                            cancel();
+                        }
+                    } else
+                        cancel();
+                }
+            }.runTaskTimerAsynchronously(SkyFighters.instance, 0, 20);
         }
     }
 
@@ -47,6 +122,14 @@ public class Listeners implements org.bukkit.event.Listener {
         PlayerInventory inv = p.getInventory();
         inv.clear();
         inv.setChestplate(new ItemStack(Material.ELYTRA));
+        for (Weapon weapon : SkyFighters.instance.weapons) {
+            ItemStack item = weapon.item;
+            item.setAmount(weapon.charges);
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(weapon.name);
+            item.setItemMeta(meta);
+            inv.setItem(SkyFighters.instance.weapons.indexOf(weapon), item);
+        }
         p.getInventory().setContents(inv.getContents());
         p.updateInventory();
     }
@@ -54,7 +137,7 @@ public class Listeners implements org.bukkit.event.Listener {
     @EventHandler
     public void ServerListPing(ServerListPingEvent e) {
         e.setMaxPlayers(0);
-        e.setMotd(ChatColor.GREEN + "SkyFighters " + ChatColor.GOLD + "v" + SkyFighters.instance.getDescription().getVersion() + "\n" + Integer.toString(Bukkit.getOnlinePlayers().size()) + ChatColor.WHITE + " Players are online.");
+        e.setMotd(ChatColor.GREEN + "SkyFighters " + ChatColor.GOLD + "v" + SkyFighters.instance.getDescription().getVersion() + "\n" + Bukkit.getOnlinePlayers().size() + ChatColor.WHITE + " Players are online.");
     }
 
     @EventHandler
