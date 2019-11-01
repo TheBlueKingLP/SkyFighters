@@ -173,7 +173,7 @@ public class Listeners implements org.bukkit.event.Listener {
 
             if (p.isGliding()) {
                 if (!boostCooldowns.containsKey(p) || boostCooldowns.get(p) + 3 < Instant.now().getEpochSecond()) {
-                    p.sendActionBar(ChatColor.GREEN + "BOOST (SHIFT)");
+                    p.sendActionBar(ChatColor.GREEN + "BOOST (SNEAK)");
                 } else if (boostCooldowns.get(p) + 1 > Instant.now().getEpochSecond()) {
                     p.sendActionBar(ChatColor.BLUE + "BOOSTING");
                     double vel = p.getVelocity().length();
