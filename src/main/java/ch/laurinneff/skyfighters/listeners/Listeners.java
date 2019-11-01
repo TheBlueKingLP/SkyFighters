@@ -198,6 +198,7 @@ public class Listeners implements org.bukkit.event.Listener {
                     p.teleport(new Location(p.getWorld(), SkyFighters.instance.getConfig().getDouble("spawnPoint.x"),
                             SkyFighters.instance.getConfig().getDouble("spawnPoint.y"), SkyFighters.instance.getConfig().getDouble("spawnPoint.z"),
                             (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.yaw"), (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.pitch")));
+                    damage(p, 2, "Fall Damage", "", false);
                 }
             }
 
@@ -239,6 +240,7 @@ public class Listeners implements org.bukkit.event.Listener {
                         p.teleport(new Location(p.getWorld(), SkyFighters.instance.getConfig().getDouble("spawnPoint.x"),
                                 SkyFighters.instance.getConfig().getDouble("spawnPoint.y"), SkyFighters.instance.getConfig().getDouble("spawnPoint.z"),
                                 (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.yaw"), (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.pitch")));
+                        damage(p, 2, "Fall Damage", "", false);
                     }
                 }
             }
@@ -270,18 +272,22 @@ public class Listeners implements org.bukkit.event.Listener {
                             break;
                         }
                     }
-                    double newHealth = p.getHealth() - w.damage;
-                    if (newHealth < 0) {
-                        Bukkit.broadcastMessage(ChatColor.AQUA + p.getName() + ChatColor.RED + " was killed by " +
-                                ChatColor.AQUA + Objects.requireNonNull(e.getDamager().getCustomName()).split(";")[1] +
-                                ChatColor.RED +" with " + ChatColor.AQUA + w.name);
-                        p.setHealth(Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
-                        p.setFoodLevel(20);
-                        respawn(p);
-                    } else
-                        p.setHealth(newHealth);
+                    damage(p, w.damage, Objects.requireNonNull(e.getDamager().getCustomName()).split(";")[1], w.name, true);
                 }
             }
+        }
+    }
+
+    private void damage(Player p, int d, String damager, String weapon, boolean showWeapon){
+        double newHealth = p.getHealth() - d;
+        if (newHealth <= 0) {
+            Bukkit.broadcastMessage(ChatColor.AQUA + p.getName() + ChatColor.RED + " was killed by " +
+                    ChatColor.AQUA + damager + (showWeapon ? ChatColor.RED +" with " + ChatColor.AQUA + weapon : ""));
+            p.setHealth(Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
+            p.setFoodLevel(20);
+            respawn(p);
+        } else {
+            p.setHealth(newHealth);
         }
     }
 
