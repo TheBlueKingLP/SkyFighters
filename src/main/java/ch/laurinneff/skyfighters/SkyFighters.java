@@ -20,6 +20,7 @@ public class SkyFighters extends JavaPlugin {
     public static SkyFighters instance;
     public List<Ring> rings;
     public List<Weapon> weapons;
+    public static boolean enabled = true;
 
     static {
         ConfigurationSerialization.registerClass(Ring.class, "Ring");
@@ -40,6 +41,17 @@ public class SkyFighters extends JavaPlugin {
 
         config.addDefault("rings", new Ring[]{new Ring("boost", 0, 0, 0, 0, 0, 0)});
         config.addDefault("weapons", new Weapon[]{new Weapon("Fireball", new ItemStack(Material.FIRE_CHARGE), "fireball", 3, 3)});
+        config.addDefault("spawnArea.x1", 0);
+        config.addDefault("spawnArea.y1", 0);
+        config.addDefault("spawnArea.z1", 0);
+        config.addDefault("spawnArea.x2", 0);
+        config.addDefault("spawnArea.y2", 0);
+        config.addDefault("spawnArea.z2", 0);
+        config.addDefault("spawnPoint.x", 0);
+        config.addDefault("spawnPoint.y", 0);
+        config.addDefault("spawnPoint.z", 0);
+        config.addDefault("spawnPoint.yaw", 0);
+        config.addDefault("spawnPoint.pitch", 0);
 
         config.options().copyDefaults(true);
         saveConfig();
