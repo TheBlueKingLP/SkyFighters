@@ -1,5 +1,5 @@
 main: "ch.laurinneff.skyfighters.SkyFighters"
-version: "1.1.0-SNAPSHOT"
+version: "1.2.0-SNAPSHOT"
 api-version: "1.14"
 name: "SkyFighters"
 author: "Laurin Neff"
