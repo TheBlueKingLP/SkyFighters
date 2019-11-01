@@ -108,7 +108,7 @@ public class Listeners implements org.bukkit.event.Listener {
                     } else
                         cancel();
                 }
-            }.runTaskTimerAsynchronously(SkyFighters.instance, 0, 20);
+            }.runTaskTimerAsynchronously(SkyFighters.instance, 20, 20);
         }
     }
 
