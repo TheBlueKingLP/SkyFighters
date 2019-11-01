@@ -262,7 +262,6 @@ public class Listeners implements org.bukkit.event.Listener {
                 Player p = (Player) e.getEntity();
                 e.setCancelled(true);
 
-                p.sendMessage(String.valueOf(e.getCause()));
                 if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
                     Weapon w = new Weapon("Generic Weapon", new ItemStack(Material.FIRE_CHARGE), "fireball", 1, 1, 1);
                     for (Weapon weapon : SkyFighters.instance.weapons) {
