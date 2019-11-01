@@ -6,6 +6,7 @@ import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
@@ -59,6 +60,13 @@ public class SkyFighters extends JavaPlugin {
 
         rings = config.getObject("rings", List.class);
         weapons = config.getObject("weapons", List.class);
+
+        // Set Gamerules
+        for(World w : getServer().getWorlds()){
+            w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+            w.setGameRule(GameRule.NATURAL_REGENERATION, false);
+            w.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+        }
     }
 
     public void onDisable() {

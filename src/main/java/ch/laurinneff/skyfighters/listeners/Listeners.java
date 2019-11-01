@@ -7,13 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.inventory.ItemStack;
@@ -62,7 +61,8 @@ public class Listeners implements org.bukkit.event.Listener {
                     if (inv.getItemInMainHand().getAmount() > 0) {
                         Fireball f = p.launchProjectile(Fireball.class);
                         f.setIsIncendiary(false);
-                        f.setVelocity(p.getLocation().getDirection().normalize().multiply(3*w.speed));
+                        f.setCustomName(w.name + ";" + p.getName());
+                        f.setVelocity(p.getLocation().getDirection().normalize().multiply(3 * w.speed));
                         inv.setItemInMainHand(inv.getItemInMainHand().subtract(1));
                     }
                     break;
@@ -116,12 +116,8 @@ public class Listeners implements org.bukkit.event.Listener {
     public void onJoin(PlayerJoinEvent e) {
         if (SkyFighters.enabled) {
             Player p = e.getPlayer();
-            e.setJoinMessage(ChatColor.GOLD + p.getName() + ChatColor.GREEN + " joined the game.");
-            giveItems(p);
-            p.teleport(new Location(p.getWorld(), SkyFighters.instance.getConfig().getDouble("spawnPoint.x"),
-                    SkyFighters.instance.getConfig().getDouble("spawnPoint.y"), SkyFighters.instance.getConfig().getDouble("spawnPoint.z"),
-                    (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.yaw"), (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.pitch")));
-
+            e.setJoinMessage(ChatColor.AQUA + p.getName() + ChatColor.GREEN + " joined the game.");
+            respawn(p);
         }
     }
 
@@ -139,6 +135,13 @@ public class Listeners implements org.bukkit.event.Listener {
         }
         p.getInventory().setContents(inv.getContents());
         p.updateInventory();
+    }
+
+    private void respawn(Player p) {
+        giveItems(p);
+        p.teleport(new Location(p.getWorld(), SkyFighters.instance.getConfig().getDouble("spawnPoint.x"),
+                SkyFighters.instance.getConfig().getDouble("spawnPoint.y"), SkyFighters.instance.getConfig().getDouble("spawnPoint.z"),
+                (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.yaw"), (float) SkyFighters.instance.getConfig().getDouble("spawnPoint.pitch")));
     }
 
     @EventHandler
@@ -221,7 +224,7 @@ public class Listeners implements org.bukkit.event.Listener {
                 if (e.isGliding()) {
                     p.setVelocity(p.getLocation().getDirection().multiply(1.0f));
                 } else {
-                    Bukkit.broadcastMessage(ChatColor.GOLD + p.getName() + ChatColor.RED + " stopped flying");
+                    Bukkit.broadcastMessage(ChatColor.AQUA + p.getName() + ChatColor.RED + " stopped flying");
                     p.sendActionBar(" ");
                     FileConfiguration config = SkyFighters.instance.getConfig();
                     Location loc = p.getLocation();
@@ -246,7 +249,39 @@ public class Listeners implements org.bukkit.event.Listener {
     public void onHit(EntityDamageEvent e) {
         if (SkyFighters.enabled) {
             if (e.getEntity() instanceof Player) {
+                Player p = (Player) e.getEntity();
                 e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onHit(EntityDamageByEntityEvent e) {
+        if (SkyFighters.enabled) {
+            if (e.getEntity() instanceof Player) {
+                Player p = (Player) e.getEntity();
+                e.setCancelled(true);
+
+                p.sendMessage(String.valueOf(e.getCause()));
+                if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+                    Weapon w = new Weapon("Generic Weapon", new ItemStack(Material.FIRE_CHARGE), "fireball", 1, 1, 1);
+                    for (Weapon weapon : SkyFighters.instance.weapons) {
+                        if (weapon.name.equals(Objects.requireNonNull(e.getDamager().getCustomName()).split(";")[0])) {
+                            w = weapon;
+                            break;
+                        }
+                    }
+                    double newHealth = p.getHealth() - w.damage;
+                    if (newHealth < 0) {
+                        Bukkit.broadcastMessage(ChatColor.AQUA + p.getName() + ChatColor.RED + " was killed by " +
+                                ChatColor.AQUA + Objects.requireNonNull(e.getDamager().getCustomName()).split(";")[1] +
+                                ChatColor.RED +" with " + ChatColor.AQUA + w.name);
+                        p.setHealth(Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
+                        p.setFoodLevel(20);
+                        respawn(p);
+                    } else
+                        p.setHealth(newHealth);
+                }
             }
         }
     }
@@ -259,15 +294,20 @@ public class Listeners implements org.bukkit.event.Listener {
     }
 
     @EventHandler
-    public void entityExplode(EntityExplodeEvent e){
+    public void entityExplode(EntityExplodeEvent e) {
         // stop fireballs from destroying blocks
         e.setCancelled(true);
     }
 
     @EventHandler
-    public void itemDrop(PlayerDropItemEvent e){
-        if(SkyFighters.enabled){
+    public void itemDrop(PlayerDropItemEvent e) {
+        if (SkyFighters.enabled) {
             e.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void foodLevelChange(FoodLevelChangeEvent e) {
+        e.setCancelled(true);
     }
 }
