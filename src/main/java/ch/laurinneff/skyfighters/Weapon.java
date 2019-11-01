@@ -24,13 +24,15 @@ public class Weapon implements ConfigurationSerializable {
     public String action;
     public int damage;
     public int charges;
+    public int speed;
 
-    public Weapon(String name, ItemStack item, String action, int damage, int charges) {
+    public Weapon(String name, ItemStack item, String action, int damage, int charges, int speed) {
         this.name = name;
         this.item = item;
         this.action = action;
         this.damage = damage;
         this.charges = charges;
+        this.speed = speed;
     }
 
     public Map<String, Object> serialize() {
@@ -40,10 +42,11 @@ public class Weapon implements ConfigurationSerializable {
         map.put("action", action);
         map.put("damage", damage);
         map.put("charges", charges);
+        map.put("speed", speed);
         return map;
     }
 
     public static Weapon deserialize(Map<String, Object> map) {
-        return new Weapon((String) map.get("name"), (ItemStack) map.get("item"), (String) map.get("action"), (int) map.get("damage"), (int) map.get("charges"));
+        return new Weapon((String) map.get("name"), (ItemStack) map.get("item"), (String) map.get("action"), (int) map.get("damage"), (int) map.get("charges"), (int) map.get("speed"));
     }
 }

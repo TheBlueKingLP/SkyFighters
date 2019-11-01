@@ -14,10 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -65,7 +62,7 @@ public class Listeners implements org.bukkit.event.Listener {
                     if (inv.getItemInMainHand().getAmount() > 0) {
                         Fireball f = p.launchProjectile(Fireball.class);
                         f.setIsIncendiary(false);
-                        f.setVelocity(p.getLocation().getDirection().normalize().multiply(3));
+                        f.setVelocity(p.getLocation().getDirection().normalize().multiply(3*w.speed));
                         inv.setItemInMainHand(inv.getItemInMainHand().subtract(1));
                     }
                     break;
@@ -265,5 +262,12 @@ public class Listeners implements org.bukkit.event.Listener {
     public void entityExplode(EntityExplodeEvent e){
         // stop fireballs from destroying blocks
         e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void itemDrop(PlayerDropItemEvent e){
+        if(SkyFighters.enabled){
+            e.setCancelled(true);
+        }
     }
 }

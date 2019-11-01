@@ -39,8 +39,9 @@ public class SkyFighters extends JavaPlugin {
         Bukkit.getWorlds().forEach(world -> world.setGameRule(GameRule.DO_WEATHER_CYCLE, false));
         FileConfiguration config = this.getConfig();
 
+        // Config Defaults
         config.addDefault("rings", new Ring[]{new Ring("boost", 0, 0, 0, 0, 0, 0)});
-        config.addDefault("weapons", new Weapon[]{new Weapon("Fireball", new ItemStack(Material.FIRE_CHARGE), "fireball", 3, 3)});
+        config.addDefault("weapons", new Weapon[]{new Weapon("Fireball", new ItemStack(Material.FIRE_CHARGE), "fireball", 3, 3, 1)});
         config.addDefault("spawnArea.x1", 0);
         config.addDefault("spawnArea.y1", 0);
         config.addDefault("spawnArea.z1", 0);
